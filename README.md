@@ -19,7 +19,7 @@ The FAF fuses data from several public and private databases to create these sta
 The results can optionally be saved in a comma-separated value file for later processing, although the reshape_faf_data function returns a data frame that you can then save in whatever format or file system you want. I typically save the resulting data frame in R binary format in order to keep from having to recreate it often, but you could load this package and use that function to download the data from the FAF website every time you use it. The code to do might look like this:
 
 ```
-faf_source <- ""
+faf_source <- "http://www.rita.dot.gov/bts/sites/rita.dot.gov.bts/files/AdditionalAttachmentFiles/FAF4.2_data.zip"
 faf <- reshape_faf_data(faf_source)
 ```
 
