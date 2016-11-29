@@ -4,18 +4,19 @@
 \alias{reshape_faf_data}
 \title{Reshape and extend the FAF v4 data from original to simulation-ready format}
 \usage{
-reshape_faf_data(faf_flow_data, faf_interregional_distances,
+reshape_faf_data(faf_flow_data,
+  faf_interregional_distances = faf4_interregional_distances,
   internal_faf_regions = NULL, halo_faf_regions = c(), save_to = NULL)
 }
 \arguments{
 \item{faf_flow_data}{Filename of FAF flow data in the format distributed by
-FHWA (i.e., as downloaded from their website). This file can be the URL 
+FHWA (i.e., as downloaded from their website). This file can be the URL
 from the FAF website, or stored locally. It can also be stored in gzip
 format.}
 
 \item{faf_interregional_distances}{Name of file containing FAF inter-regional
 distances. Fields for dms_orig (domestic origin), dms_dest (domestic
-destination), and distance should be provided. All other fields are 
+destination), and distance should be provided. All other fields are
 ignored, if included.}
 
 \item{internal_faf_regions}{A list of the FAF regions within the modeled or
@@ -24,7 +25,7 @@ study area. If not specified the entire FAF database will be processed.
 
 \item{halo_faf_regions}{A optional list of FAF regions adjacent to the
 modeled or study area that might create flows through it. This parameter
-can be omitted if desired, which will imply that no halo is defined. 
+can be omitted if desired, which will imply that no halo is defined.
 (Optional, and ignored if internal_faf_regions are not specified)}
 
 \item{save_to}{Filename for saving the processed FAF trip records in
@@ -38,7 +39,7 @@ This function reshapes the FHWA Freight Analysis Framework (FAF)
   data from its originally distributed format into a one more ideally suited
   for visualization with ggplot2 or use in time-series simulation. It changes
   the format of categorical variables from hard-to-remember integer values to
-  descriptive strings, and adds the distance between the centroids of the 
+  descriptive strings, and adds the distance between the centroids of the
   domestic origins and destinations. The value of shipments and tonnage,
   originally coded in millions of dollars and thousands of tons, are stored
   in unscaled format. The format of the data is also changed, with a separate
@@ -59,7 +60,7 @@ This function reshapes the FHWA Freight Analysis Framework (FAF)
 faf <- reshape_faf_data(faf_flow_data, faf_skims, save_to = "reshaped-faf.csv")
 
 # Process Oregon as internal, with Idaho and Washington as the halo
-oregon <- reshape_faf_data(faf_flow_data, faf_interregional_distances, 
+oregon <- reshape_faf_data(faf_flow_data, faf_interregional_distances,
   c(141, 149, 532), c(160, 531, 539), "reshaped-faf.csv")
 }
 

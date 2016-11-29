@@ -1,19 +1,19 @@
 #' Reshape and extend the FAF v4 data from original to simulation-ready format
-#' 
+#'
 #' @param faf_flow_data Filename of FAF flow data in the format distributed by
-#'   FHWA (i.e., as downloaded from their website). This file can be the URL 
+#'   FHWA (i.e., as downloaded from their website). This file can be the URL
 #'   from the FAF website, or stored locally. It can also be stored in gzip
 #'   format.
 #' @param faf_interregional_distances Name of file containing FAF inter-regional
 #'   distances. Fields for dms_orig (domestic origin), dms_dest (domestic
-#'   destination), and distance should be provided. All other fields are 
+#'   destination), and distance should be provided. All other fields are
 #'   ignored, if included.
 #' @param internal_faf_regions A list of the FAF regions within the modeled or
 #'   study area. If not specified the entire FAF database will be processed.
 #'   (Optional)
 #' @param halo_faf_regions A optional list of FAF regions adjacent to the
 #'   modeled or study area that might create flows through it. This parameter
-#'   can be omitted if desired, which will imply that no halo is defined. 
+#'   can be omitted if desired, which will imply that no halo is defined.
 #'   (Optional, and ignored if internal_faf_regions are not specified)
 #' @param save_to Filename for saving the processed FAF trip records in
 #'   comma-separated value format. (Optional)
@@ -22,7 +22,7 @@
 #'   data from its originally distributed format into a one more ideally suited
 #'   for visualization with ggplot2 or use in time-series simulation. It changes
 #'   the format of categorical variables from hard-to-remember integer values to
-#'   descriptive strings, and adds the distance between the centroids of the 
+#'   descriptive strings, and adds the distance between the centroids of the
 #'   domestic origins and destinations. The value of shipments and tonnage,
 #'   originally coded in millions of dollars and thousands of tons, are stored
 #'   in unscaled format. The format of the data is also changed, with a separate
@@ -36,18 +36,19 @@
 #'   This can significantly reduce the amount of time required to process these
 #'   data in subsequent analyses. The user can also optionally save the results
 #'   in a comma-separated value file. The function returns the processed data
-#'   frame, which of course can be stored in any format desired. 
-#'   
+#'   frame, which of course can be stored in any format desired.
+#'
 #' @export
 #' @examples
 #' # Process the entire FAF dataset, and save results in CSV file
 #' faf <- reshape_faf_data(faf_flow_data, faf_skims, save_to = "reshaped-faf.csv")
-#' 
+#'
 #' # Process Oregon as internal, with Idaho and Washington as the halo
-#' oregon <- reshape_faf_data(faf_flow_data, faf_interregional_distances, 
+#' oregon <- reshape_faf_data(faf_flow_data, faf_interregional_distances,
 #'   c(141, 149, 532), c(160, 531, 539), "reshaped-faf.csv")
 
-reshape_faf_data <- function(faf_flow_data, faf_interregional_distances,
+reshape_faf_data <- function(faf_flow_data,
+  faf_interregional_distances = faf4_interregional_distances,
   internal_faf_regions = NULL, halo_faf_regions = c(), save_to = NULL) {
   # How we process zones will depend upon what category they are (internal
   # versus halo). Start by extracting all travel to, fron, and within the FAF
@@ -77,7 +78,7 @@ reshape_faf_data <- function(faf_flow_data, faf_interregional_distances,
   combined <- dplyr::bind_rows(internal, halo)
   print(paste(nrow(combined), "internal and halo flow records retained"),
     quote = FALSE)
-  
+
   # The raw data are in wide format, with tonnage and value for several years
   # (base year plus several forecast years in five-year intervals). Convert the
   # data into tall format so that we can separate the year from the metric, and
@@ -87,13 +88,13 @@ reshape_faf_data <- function(faf_flow_data, faf_interregional_distances,
     tidyr::gather("vname", "n", -(fr_orig:trade_type)) %>%
     tidyr::separate(vname, c("vname", "year"), sep = '_') %>%
     tidyr::spread(vname, n)
-  
+
   # Next append the skim distance between the FAF regions, which are obtained
   # from a matrix of such values previously compiled by @gregmacfarlane, and
   # stored as a data frame.
   distance <- readr::read_csv(faf_interregional_distances)
   faf <- dplyr::left_join(reformatted, distance, by = c("dms_orig", "dms_dest"))
-  
+
   # Make sure that all of the records now have distance coded. If missing values
   # snuck through them catch them now.
   problem_children <- dplyr::filter(faf, is.na(distance))
@@ -103,7 +104,7 @@ reshape_faf_data <- function(faf_flow_data, faf_interregional_distances,
     print(missing_skims)
     stop("FAF regions found in flow data, but no corresponding skims")
   }
-  
+
   # Several of the variables in the original data have numeric values that are
   # hard to remember what they stand for. We will make it simpler by recoding
   # these variables. We will be able to distinguish them from their original
@@ -117,14 +118,14 @@ reshape_faf_data <- function(faf_flow_data, faf_interregional_distances,
   faf$dms_mode <- factor(mode_labels[faf$dms_mode], levels = mode_labels)
   faf$fr_inmode <- factor(mode_labels[faf$fr_inmode], levels = mode_labels)
   faf$fr_outmode <- factor(mode_labels[faf$fr_outmode], levels = mode_labels)
-  
+
   # Recode commodities as factors
   faf$sctg2 <- factor(faf$sctg2)
-  
+
   # Scale the units for tons (thousands) and value (millions)
   faf$value <- round(faf$value*1e6, 2)
   faf$tons <- round(faf$tons*1e3, 1)
-  
+
   # Write the data frame to a CSV file if the user has asked for it
   if (!is.null(save_to)) readr::write_csv(faf, save_to)
 
